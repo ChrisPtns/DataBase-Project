@@ -1,0 +1,101 @@
+USE university_library;
+
+-- 1. Ποια βιβλία έχει δανειστεί ο φοιτητής με ΑΜ 20231234; [cite: 42]
+SELECT b.title 
+FROM Books b
+JOIN Loans l ON b.book_id = l.book_id
+JOIN Students s ON l.student_id = s.student_id
+WHERE s.student_number = '20231234';
+
+-- 2. Ποια βιβλία δεν έχουν δανειστεί ποτέ; [cite: 43]
+SELECT b.title 
+FROM Books b
+LEFT JOIN Loans l ON b.book_id = l.book_id
+WHERE l.loan_id IS NULL;
+
+-- 3. Ποιοι φοιτητές έχουν δανειστεί βιβλία του εκδοτικού οίκου “Κάτοπτρο”; [cite: 44]
+SELECT DISTINCT s.first_name, s.last_name 
+FROM Students s
+JOIN Loans l ON s.student_id = l.student_id
+JOIN Books b ON l.book_id = b.book_id
+JOIN Publishers p ON b.publisher_id = p.publisher_id
+WHERE p.name = 'Κάτοπτρο';
+
+-- 4. Πόσα αντίτυπα είναι διαθέσιμα για το βιβλίο με τίτλο "Αλγοριθμική Σκέψη"; [cite: 45]
+SELECT available_copies 
+FROM Books 
+WHERE title = 'Αλγοριθμική Σκέψη';
+
+-- 5. Λίστα βιβλίων που εκδόθηκαν πριν το 2010. [cite: 46]
+SELECT title, year_published 
+FROM Books 
+WHERE year_published < 2010;
+
+-- 6. Ποιες είναι οι 5 πιο πρόσφατες επιστροφές βιβλίων; [cite: 47]
+SELECT s.first_name, s.last_name, b.title, l.return_date
+FROM Loans l
+JOIN Students s ON l.student_id = s.student_id
+JOIN Books b ON l.book_id = b.book_id
+WHERE l.return_date IS NOT NULL
+ORDER BY l.return_date DESC
+LIMIT 5;
+
+-- 7. Ποιοι φοιτητές έχουν καθυστερημένες επιστροφές; [cite: 48]
+SELECT DISTINCT s.first_name, s.last_name 
+FROM Students s
+JOIN Loans l ON s.student_id = l.student_id
+WHERE l.return_date > l.due_date;
+
+-- 8. Πόσα βιβλία έχει δανειστεί κάθε φοιτητής (με όνομα); [cite: 49]
+SELECT s.first_name, s.last_name, COUNT(l.loan_id) AS total_borrowed
+FROM Students s
+LEFT JOIN Loans l ON s.student_id = l.student_id
+GROUP BY s.student_id, s.first_name, s.last_name;
+
+-- 9. Πόσες φορές έχει δανειστεί το κάθε βιβλίο; [cite: 50]
+SELECT b.title, COUNT(l.loan_id) AS borrow_count
+FROM Books b
+LEFT JOIN Loans l ON b.book_id = l.book_id
+GROUP BY b.book_id, b.title;
+
+-- 10. Ποια βιβλία έχουν εκδοθεί από συγγραφείς με επώνυμο ‘Παπαδόπουλος’; [cite: 51]
+SELECT b.title 
+FROM Books b
+JOIN Authors a ON b.author_id = a.author_id
+WHERE a.last_name = 'Παπαδόπουλος';
+
+-- 11. Λίστα φοιτητών που δεν έχουν δανειστεί ποτέ βιβλίο. [cite: 52]
+SELECT s.first_name, s.last_name 
+FROM Students s
+LEFT JOIN Loans l ON s.student_id = l.student_id
+WHERE l.loan_id IS NULL;
+
+-- 12. Ποια είναι τα πιο δημοφιλή βιβλία (με βάση τα δανεισμένα); [cite: 53]
+SELECT b.title, COUNT(l.loan_id) AS times_borrowed
+FROM Books b
+JOIN Loans l ON b.book_id = l.book_id
+GROUP BY b.book_id, b.title
+ORDER BY times_borrowed DESC;
+
+-- 13. Ποια βιβλία έχουν επιστραφεί εγκαίρως και ποια με καθυστέρηση; [cite: 54]
+SELECT b.title, 
+    CASE 
+        WHEN l.return_date <= l.due_date THEN 'Εγκαίρως'
+        WHEN l.return_date > l.due_date THEN 'Με Καθυστέρηση'
+        ELSE 'Δεν έχει επιστραφεί ακόμα'
+    END AS return_status
+FROM Loans l
+JOIN Books b ON l.book_id = b.book_id;
+
+-- 14. Ποιοι φοιτητές έχουν δανειστεί βιβλία περισσότερες από 3 φορές; [cite: 55]
+SELECT s.first_name, s.last_name, COUNT(l.loan_id) AS total_borrowed
+FROM Students s
+JOIN Loans l ON s.student_id = l.student_id
+GROUP BY s.student_id, s.first_name, s.last_name
+HAVING COUNT(l.loan_id) > 3;
+
+-- 15. Ποιες εκδόσεις προέρχονται από την Ελλάδα και ποια βιβλία σχετίζονται με αυτές; [cite: 56]
+SELECT p.name AS publisher_name, b.title AS book_title
+FROM Publishers p
+JOIN Books b ON p.publisher_id = b.publisher_id
+WHERE p.country = 'Ελλάδα';
